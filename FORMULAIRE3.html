@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>MyMailApp - Historique</title>
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = "FORMULAIRE1.html"; }
+    </script>
+    <style>
+        .navbar { width: 100%; background: rgba(0,0,0,0.9); padding: 15px 0; position: fixed; top: 0; display: flex; justify-content: center; gap: 20px; }
+        .navbar a { color: white; text-decoration: none; font-weight: bold; }
+        body { background: url('LEFOND.png') no-repeat center center fixed; background-size: cover; padding-top: 100px; font-family: Arial; }
+        .container { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 600px; margin: auto; color: #333; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #0000ff; color: white; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="formulaire2.html">ENVOYER</a>
+        <a href="FORMULAIRE3.html" style="color:#ffcc00">HISTORIQUE</a>
+        <a href="#" onclick="sessionStorage.clear(); window.location.reload();" style="color:red">DÉCONNEXION</a>
+    </nav>
+
+    <div class="container">
+        <h2>MESSAGES ENVOYES</h2>
+        <table>
+            <thead><tr><th>Date</th><th>Email</th><th>Message</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <button onclick="localStorage.removeItem('monHistorique'); location.reload();" style="margin-top:10px; color:red; cursor:pointer">Vider l'historique</button>
+    </div>
+
+    <script>
+        const histo = JSON.parse(localStorage.getItem('monHistorique')) || [];
+        const body = document.getElementById('tableBody');
+        histo.reverse().forEach(m => {
+            body.innerHTML += `<tr><td>${m.date}</td><td>${m.email}</td><td>${m.texte}</td></tr>`;
+        });
+    </script>
+</body>
+</html>

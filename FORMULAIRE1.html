@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>MyMailApp - Connexion</title>
+    <style>
+        body {
+            background-image: url('LEFOND.png'); 
+            background-size: cover; background-position: center;
+            font-family: Arial, sans-serif; color: #fff;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0;
+        }
+        .login-card {
+            background-color: rgba(0, 0, 255, 0.8); padding: 40px; border-radius: 15px;
+            width: 320px; box-shadow: 0px 10px 25px rgba(0,0,0,0.5); text-align: center;
+        }
+        h1 { color: #ff0000; text-shadow: 2px 2px 5px #000; }
+        input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 5px; border: none; box-sizing: border-box; }
+        .btn-login { background-color: #ff0000; color: white; font-weight: bold; cursor: pointer; }
+        #error-msg { color: #ffcc00; font-weight: bold; display: none; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>MyMailApp</h1>
+    <div class="login-card">
+        <h3>AUTHENTIFICATION</h3>
+        <p id="error-msg">Identifiants incorrects !</p>
+        <form id="authForm">
+            <input type="text" id="username" placeholder="Identifiant (admin)" required>
+            <input type="password" id="password" placeholder="Mot de passe (1234)" required>
+            <input type="submit" value="Entrer" class="btn-login">
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('authForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (document.getElementById('username').value === "admin" && 
+                document.getElementById('password').value === "1234") {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                window.location.href = "formulaire2.html";
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

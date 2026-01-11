@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>MyMailApp - Messagerie Pro</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            // Ta Public Key récupérée sur EmailJS
+            emailjs.init("RXHsHsTpmiQWjZQ-E"); 
+        })();
+
+        // Protection par mot de passe (Session)
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { 
+            window.location.href = "FORMULAIRE1.html"; 
+        }
+    </script>
+    <style>
+        /* --- STYLE GÉNÉRAL --- */
+        .navbar { width: 100%; background: #000; padding: 15px 0; position: fixed; top: 0; left: 0; display: flex; justify-content: center; gap: 20px; z-index: 1000; }
+        .navbar a { color: white; text-decoration: none; font-weight: bold; font-family: sans-serif; }
+        
+        body { 
+            background: url('LEFOND.png') no-repeat center center fixed; 
+            background-size: cover; padding-top: 80px; font-family: 'Segoe UI', Arial, sans-serif; 
+            color: white; margin: 0; 
+        }
+        
+        .main-container { 
+            display: flex; justify-content: center; gap: 30px; 
+            padding: 40px; flex-wrap: wrap; 
+        }
+
+        /* --- COLONNE GAUCHE : ENVOI --- */
+        .card-send { 
+            background: rgba(0, 0, 255, 0.85); padding: 25px; 
+            border-radius: 15px; width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+        }
+        
+        /* --- COLONNE DROITE : RÉCEPTION --- */
+        .card-inbox { 
+            background: rgba(245, 245, 245, 0.98); padding: 25px; 
+            border-radius: 15px; width: 450px; color: #333; 
+            height: 600px; display: flex; flex-direction: column; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+        }
+        
+        .messages-list { flex-grow: 1; overflow-y: auto; margin-top: 15px; padding-right: 5px; }
+        
+        input, textarea { 
+            width: 100%; padding: 12px; margin: 10px 0; 
+            border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; 
+        }
+        textarea { height: 100px; resize: none; }
+        
+        .btn-action { 
+            background: #ff0000; color: white; border: none; 
+            padding: 15px; width: 100%; font-weight: bold; 
+            cursor: pointer; border-radius: 5px; font-size: 16px; 
+            transition: 0.3s;
+        }
+        .btn-action:hover { background: #cc0000; transform: translateY(-2px); }
+
+        /* --- APPARENCE DES MESSAGES REÇUS --- */
+        .mail-item { 
+            background: white; border-left: 6px solid #0000ff; 
+            padding: 15px; border-radius: 8px; margin-bottom: 15px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+        }
+        .mail-item b { color: #0000ff; display: block; font-size: 14px; }
+        .mail-item small { color: #888; font-size: 11px; }
+        .mail-item p { margin: 8px 0 0 0; font-size: 14px; color: #333; line-height: 1.4; }
+
+        .refresh-btn { 
+            background: #007bff; color: white; border: none; 
+            padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="formulaire2.html" style="color:#ffcc00">MESSAGERIE</a>
+        <a href="FORMULAIRE3.html">HISTORIQUE ENVOIS</a>
+        <a href="#" onclick="sessionStorage.clear(); window.location.href='FORMULAIRE1.html';" style="color:#ff4444">DÉCONNEXION</a>
+    </nav>
+
+    <div class="main-container">
+        
+        <div class="card-send">
+            <h2 style="margin-top:0;">Nouveau Message</h2>
+            <form id="sendForm">
+                <label>Votre Email (Expéditeur) :</label>
+                <input type="email" id="fromEmail" required placeholder="votre_nom@mail.com">
+                
+                <label>Email du Destinataire :</label>
+                <input type="email" id="toEmail" required placeholder="destinataire@gmail.com">
+                
+                <label>Message :</label>
+                <textarea id="msgBody" required placeholder="Écrivez ici..."></textarea>
+                
+                <button type="submit" id="btnSend" class="btn-action">ENVOYER MAINTENANT</button>
+            </form>
+        </div>
+
+        <div class="card-inbox">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin:0; color:#000;">Boîte de Réception</h2>
+                <button class="refresh-btn" onclick="loadInbox()">Actualiser</button>
+            </div>
+            <div id="inboxDisplay" class="messages-list">
+                <p style="text-align:center; color:#999;">Chargement des messages entrants...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- CONFIGURATION URL GOOGLE SCRIPT ---
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxBkO4UjulUPr8iEs-qjvbK8BhXI4H1SNQ-_rY3aTKxuyRQnm58RP1ZPJLMcKgdTqgSxA/exec";
+
+        // 1. FONCTION : CHARGER LES MESSAGES REÇUS
+        async function loadInbox() {
+            const container = document.getElementById('inboxDisplay');
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const mails = await response.json();
+                
+                container.innerHTML = "";
+                if (mails.length === 0) {
+                    container.innerHTML = "<p style='text-align:center;'>Aucun message dans Gmail.</p>";
+                    return;
+                }
+
+                // Inverser pour voir le plus récent en haut
+                mails.reverse().forEach(item => {
+                    container.innerHTML += `
+                        <div class="mail-item">
+                            <b>De : ${item.from}</b>
+                            <small>${new Date(item.date).toLocaleString('fr-FR')}</small>
+                            <p>${item.text}</p>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                container.innerHTML = "<p style='color:red;'>Erreur de connexion à la base Google.</p>";
+            }
+        }
+
+        // 2. FONCTION : ENVOYER VIA EMAILJS
+        document.getElementById('sendForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSend');
+            const fMail = document.getElementById('fromEmail').value;
+            const tMail = document.getElementById('toEmail').value;
+            const body = document.getElementById('msgBody').value;
+
+            btn.innerHTML = "Expédition en cours...";
+            btn.disabled = true;
+
+            const templateParams = {
+                destinataire: tMail,
+                from_email: fMail,
+                message: body,
+                reply_to: fMail // Très important pour que le destinataire réponde à l'utilisateur
+            };
+
+            emailjs.send('service_ph89m4l', 'template_go7c1ag', templateParams)
+                .then(function() {
+                    // Sauvegarde dans l'historique local (FORMULAIRE 3)
+                    let logs = JSON.parse(localStorage.getItem('monHistorique')) || [];
+                    logs.unshift({ date: new Date().toLocaleString(), email: tMail, texte: body });
+                    localStorage.setItem('monHistorique', JSON.stringify(logs));
+                    
+                    alert("Succès ! Votre message a été expédié.");
+                    btn.disabled = false;
+                    btn.innerHTML = "ENVOYER MAINTENANT";
+                    document.getElementById('msgBody').value = ""; // Vider le champ
+                }, function(error) {
+                    alert("Erreur d'envoi EmailJS : " + JSON.stringify(error));
+                    btn.disabled = false;
+                    btn.innerHTML = "RÉESSAYER";
+                });
+        });
+
+        // Charger les messages dès l'ouverture de la page
+        window.onload = loadInbox;
+    </script>
+</body>
+</html>
